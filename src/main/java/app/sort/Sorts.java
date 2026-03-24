@@ -25,6 +25,7 @@ public final class Sorts {
             new PigeonholeSort(),
             new CycleSort(),
             new BitonicSort(),
-            new ExternalMergeSort()
+            new ExternalMergeSort(),
+            new PancakeSort()
     );
 }
