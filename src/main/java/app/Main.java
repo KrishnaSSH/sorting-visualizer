@@ -8,7 +8,6 @@ import app.ui.Theme;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -26,8 +25,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.SplitPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -57,9 +54,8 @@ public class Main extends Application {
     TextField algFilter;
     Label status;
     BorderPane root;
-    VBox right;
-    ScrollPane rightScroll;
     MenuBar menuBar;
+    HBox controlBar;
     ChoiceBox<ThemeOption> themeChoice;
     ChoiceBox<Accent> accentChoice;
     ChoiceBox<String> fontChoice;
@@ -125,17 +121,13 @@ public class Main extends Application {
         barModeChoice.getItems().addAll(BarMode.RAINBOW, BarMode.ACCENT, BarMode.CUSTOM);
         barModeChoice.getSelectionModel().selectFirst();
 
+        controlBar = buildControlBar(shuffle, run);
         root = new BorderPane();
         menuBar = buildMenu(stage);
-        root.setTop(menuBar);
+        VBox header = new VBox(menuBar, controlBar);
+        root.setTop(header);
         StackPane center = new StackPane(canvas);
-        right = buildRightPanel(shuffle, run);
-        rightScroll = new ScrollPane(right);
-        rightScroll.setFitToWidth(true);
-        rightScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        SplitPane split = new SplitPane(center, rightScroll);
-        split.setDividerPositions(0.75);
-        root.setCenter(split);
+        root.setCenter(center);
         Scene scene = new Scene(root, 1100, 600);
 
         canvas.widthProperty().bind(center.widthProperty());
@@ -262,9 +254,8 @@ public class Main extends Application {
         String acc = toHex(accent.color());
         root.setStyle("-fx-background-color:" + bg + "; -fx-base:" + panel + "; -fx-control-inner-background:" + panel + "; -fx-text-fill:" + text + "; -fx-accent:" + acc + "; -fx-focus-color:" + acc + "; -fx-faint-focus-color:" + acc + "33; -fx-font-family: " + fontFamily + "; -fx-font-size: 12px;");
         menuBar.setStyle("-fx-background-color:" + panel + "; -fx-text-fill:" + text + ";");
-        right.setStyle("-fx-background-color:" + panel + "; -fx-border-color:" + acc + "; -fx-border-width:1;");
-        rightScroll.setStyle("-fx-background:" + panel + "; -fx-background-color:" + panel + ";");
-        for (Node n : right.getChildren()) {
+        controlBar.setStyle("-fx-background-color:" + panel + "; -fx-border-color:" + acc + "; -fx-border-width:0 0 1 0;");
+        for (Node n : controlBar.getChildren()) {
             if (n instanceof Label l) l.setTextFill(theme.text());
         }
         for (Node n : menuBar.getChildrenUnmodifiable()) {
@@ -480,19 +471,15 @@ public class Main extends Application {
         s.showAndWait();
     }
 
-    VBox buildRightPanel(Button shuffle, Button run) {
-        VBox box = new VBox(8,
-                label("Controls"),
+    HBox buildControlBar(Button shuffle, Button run) {
+        HBox box = new HBox(10,
                 label("Algorithm"), algFilter, alg,
                 label("Size"), size, sizeField,
                 label("Speed"), speed, speedField,
                 shuffle, run,
                 label("Status"), status
         );
-        box.setPadding(new Insets(12));
-        box.setPrefWidth(260);
-        box.setMinWidth(220);
-        box.setAlignment(Pos.TOP_LEFT);
+        box.setPadding(new Insets(6, 8, 6, 8));
         return box;
     }
 
