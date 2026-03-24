@@ -1,1 +1,3 @@
-Sorting algorithm visualizer
+## Sorting algorithm visualizer
+
+![Mockup](assets/mockups/mockup.png)
