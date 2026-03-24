@@ -48,6 +48,14 @@ public final class Visualizer {
         return arr;
     }
 
+    public int opIndex() {
+        return opIndex;
+    }
+
+    public int opTotal() {
+        return ops.size();
+    }
+
     public void clearOps() {
         ops = List.of();
         opIndex = 0;

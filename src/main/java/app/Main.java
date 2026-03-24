@@ -8,6 +8,7 @@ import app.ui.Theme;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -15,6 +16,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
@@ -25,6 +27,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -40,10 +44,10 @@ public class Main extends Application {
     long lastTick = 0;
     double acc = 0;
     Theme theme = Theme.DARK;
-    Accent accent = new Accent("Amber", Color.web("#c49a6c"));
+    Accent accent = new Accent("Green", Color.web("#7fb069"));
     String fontFamily = "Monospaced";
     BarMode barMode = BarMode.RAINBOW;
-    Color barColor = Color.web("#c49a6c");
+    Color barColor = Color.web("#7fb069");
 
     Canvas canvas;
     Slider speed;
@@ -53,9 +57,11 @@ public class Main extends Application {
     ChoiceBox<SortAlgo> alg;
     TextField algFilter;
     Label status;
+    ProgressBar statusBar;
     BorderPane root;
     MenuBar menuBar;
     HBox controlBar;
+    Region accentBar;
     ChoiceBox<ThemeOption> themeChoice;
     ChoiceBox<Accent> accentChoice;
     ChoiceBox<String> fontChoice;
@@ -80,6 +86,8 @@ public class Main extends Application {
         Button shuffle = new Button("Shuffle");
         Button run = new Button("Run");
         status = new Label();
+        statusBar = new ProgressBar(0);
+        statusBar.setPrefWidth(140);
 
         algFilter = new TextField();
         algFilter.setPromptText("Search...");
@@ -96,8 +104,8 @@ public class Main extends Application {
 
         accentChoice = new ChoiceBox<>();
         accentChoice.getItems().addAll(
-                new Accent("Amber", Color.web("#c49a6c")),
                 new Accent("Green", Color.web("#7fb069")),
+                new Accent("Amber", Color.web("#c49a6c")),
                 new Accent("Orange", Color.web("#d38b5d")),
                 new Accent("Cyan", Color.web("#6ea7b8")),
                 new Accent("Red", Color.web("#b86e6e")),
@@ -124,7 +132,9 @@ public class Main extends Application {
         controlBar = buildControlBar(shuffle, run);
         root = new BorderPane();
         menuBar = buildMenu(stage);
-        VBox header = new VBox(menuBar, controlBar);
+        accentBar = new Region();
+        accentBar.setPrefHeight(3);
+        VBox header = new VBox(accentBar, menuBar, controlBar);
         root.setTop(header);
         StackPane center = new StackPane(canvas);
         root.setCenter(center);
@@ -139,6 +149,7 @@ public class Main extends Application {
             if (!running) {
                 viz.init(c.intValue());
                 status.setText("");
+                statusBar.setProgress(0);
                 draw();
             }
             if (!sizeField.isFocused()) sizeField.setText(String.valueOf(c.intValue()));
@@ -184,6 +195,7 @@ public class Main extends Application {
             if (!running) {
                 viz.shuffle();
                 status.setText("Shuffled");
+                statusBar.setProgress(0);
                 draw();
             }
         });
@@ -193,6 +205,7 @@ public class Main extends Application {
                 running = false;
                 resetTimer();
                 status.setText("Paused");
+                updateStatus();
                 run.setText("Run");
                 return;
             }
@@ -207,6 +220,7 @@ public class Main extends Application {
             resetTimer();
             running = true;
             status.setText("Running");
+            statusBar.setProgress(0);
             run.setText("Pause");
         });
 
@@ -226,9 +240,11 @@ public class Main extends Application {
                 acc -= steps;
                 if (steps > 0) {
                     boolean done = viz.step(steps);
+                    updateStatus();
                     if (done) {
                         running = false;
                         status.setText("Done");
+                        statusBar.setProgress(1);
                         run.setText("Run");
                     }
                 }
@@ -255,9 +271,12 @@ public class Main extends Application {
         root.setStyle("-fx-background-color:" + bg + "; -fx-base:" + panel + "; -fx-control-inner-background:" + panel + "; -fx-text-fill:" + text + "; -fx-accent:" + acc + "; -fx-focus-color:" + acc + "; -fx-faint-focus-color:" + acc + "33; -fx-font-family: " + fontFamily + "; -fx-font-size: 12px;");
         menuBar.setStyle("-fx-background-color:" + panel + "; -fx-text-fill:" + text + ";");
         controlBar.setStyle("-fx-background-color:" + panel + "; -fx-border-color:" + acc + "; -fx-border-width:0 0 1 0;");
+        accentBar.setStyle("-fx-background-color:" + acc + ";");
         for (Node n : controlBar.getChildren()) {
             if (n instanceof Label l) l.setTextFill(theme.text());
         }
+        status.setTextFill(accent.color());
+        statusBar.setStyle("-fx-accent:" + acc + ";");
         for (Node n : menuBar.getChildrenUnmodifiable()) {
             if (n instanceof MenuBar mb) mb.setStyle("-fx-background-color:" + panel + ";");
         }
@@ -289,6 +308,19 @@ public class Main extends Application {
         } else if (alg.getSelectionModel().isEmpty()) {
             alg.getSelectionModel().selectFirst();
         }
+    }
+
+    void updateStatus() {
+        int total = viz.opTotal();
+        int idx = viz.opIndex();
+        if (total <= 0) {
+            statusBar.setProgress(0);
+            return;
+        }
+        double p = Math.min(1.0, Math.max(0.0, idx / (double) total));
+        statusBar.setProgress(p);
+        int pct = (int) Math.round(p * 100);
+        status.setText((running ? "Running " : "") + idx + "/" + total + " (" + pct + "%)");
     }
 
     void draw() {
@@ -472,14 +504,39 @@ public class Main extends Application {
     }
 
     HBox buildControlBar(Button shuffle, Button run) {
-        HBox box = new HBox(10,
-                label("Algorithm"), algFilter, alg,
-                label("Size"), size, sizeField,
-                label("Speed"), speed, speedField,
-                shuffle, run,
-                label("Status"), status
+        size.setPrefWidth(160);
+        speed.setPrefWidth(160);
+
+        HBox algoRow = new HBox(6, algFilter, alg);
+        HBox sizeRow = new HBox(6, size, sizeField);
+        HBox speedRow = new HBox(6, speed, speedField);
+        HBox runRow = new HBox(6, shuffle, run);
+        HBox statusRow = new HBox(6, statusBar, status);
+        algoRow.setAlignment(Pos.CENTER_LEFT);
+        sizeRow.setAlignment(Pos.CENTER_LEFT);
+        speedRow.setAlignment(Pos.CENTER_LEFT);
+        runRow.setAlignment(Pos.CENTER_LEFT);
+        statusRow.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(alg, Priority.NEVER);
+        HBox.setHgrow(algFilter, Priority.NEVER);
+        HBox.setHgrow(size, Priority.NEVER);
+        HBox.setHgrow(speed, Priority.NEVER);
+
+        HBox box = new HBox(14,
+                group("Algorithm", algoRow),
+                group("Size", sizeRow),
+                group("Speed", speedRow),
+                group("Controls", runRow),
+                group("Status", statusRow)
         );
+        box.setAlignment(Pos.CENTER_LEFT);
         box.setPadding(new Insets(6, 8, 6, 8));
+        return box;
+    }
+
+    VBox group(String title, HBox row) {
+        VBox box = new VBox(4, label(title), row);
+        box.setAlignment(Pos.CENTER_LEFT);
         return box;
     }
 
