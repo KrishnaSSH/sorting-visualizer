@@ -21,6 +21,7 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioMenuItem;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
@@ -62,6 +63,7 @@ public class Main extends Application {
     MenuBar menuBar;
     HBox controlBar;
     Region accentBar;
+    ScrollPane controlScroll;
     ChoiceBox<ThemeOption> themeChoice;
     ChoiceBox<Accent> accentChoice;
     ChoiceBox<String> fontChoice;
@@ -134,7 +136,12 @@ public class Main extends Application {
         menuBar = buildMenu(stage);
         accentBar = new Region();
         accentBar.setPrefHeight(3);
-        VBox header = new VBox(accentBar, menuBar, controlBar);
+        controlScroll = new ScrollPane(controlBar);
+        controlScroll.setFitToHeight(true);
+        controlScroll.setFitToWidth(true);
+        controlScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        controlScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        VBox header = new VBox(accentBar, menuBar, controlScroll);
         root.setTop(header);
         StackPane center = new StackPane(canvas);
         root.setCenter(center);
@@ -271,6 +278,7 @@ public class Main extends Application {
         root.setStyle("-fx-background-color:" + bg + "; -fx-base:" + panel + "; -fx-control-inner-background:" + panel + "; -fx-text-fill:" + text + "; -fx-accent:" + acc + "; -fx-focus-color:" + acc + "; -fx-faint-focus-color:" + acc + "33; -fx-font-family: " + fontFamily + "; -fx-font-size: 12px;");
         menuBar.setStyle("-fx-background-color:" + panel + "; -fx-text-fill:" + text + ";");
         controlBar.setStyle("-fx-background-color:" + panel + "; -fx-border-color:" + acc + "; -fx-border-width:0 0 1 0;");
+        controlScroll.setStyle("-fx-background:" + panel + "; -fx-background-color:" + panel + ";");
         accentBar.setStyle("-fx-background-color:" + acc + ";");
         for (Node n : controlBar.getChildren()) {
             if (n instanceof Label l) l.setTextFill(theme.text());
@@ -333,11 +341,15 @@ public class Main extends Application {
         int n = arr.length;
         if (n == 0) return;
         double barW = w / n;
+        double drawW = Math.max(1, barW);
         for (int i = 0; i < n; i++) {
             double v = arr[i];
             double barH = (v / n) * (h - 20);
+            if (barH > h - 2) barH = h - 2;
+            if (barH < 1) barH = 1;
             double x = i * barW;
             double y = h - barH;
+            if (y < 0) y = 0;
             Color c;
             if (barMode == BarMode.RAINBOW) {
                 double hue = (v / n) * 300;
@@ -349,7 +361,7 @@ public class Main extends Application {
                 c = Color.hsb(base.getHue(), Math.max(0.25, base.getSaturation()), val);
             }
             g.setFill(c);
-            g.fillRect(x, y, barW - 1, barH);
+            g.fillRect(x, y, drawW, barH);
         }
     }
 
