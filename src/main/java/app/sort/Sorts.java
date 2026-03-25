@@ -28,6 +28,9 @@ public final class Sorts {
             new BitonicSort(),
             new ExternalMergeSort(),
             new PancakeSort(),
-            new StrandSort()
+            new StrandSort(),
+            new BogoSort(),
+            new StoogeSort(),
+            new SlowSort()
     );
 }
