@@ -32,6 +32,7 @@ public final class Sorts {
             new BogoSort(),
             new StoogeSort(),
             new SlowSort(),
-            new TreeSort()
+            new TreeSort(),
+            new FlashSort()
     );
 }
