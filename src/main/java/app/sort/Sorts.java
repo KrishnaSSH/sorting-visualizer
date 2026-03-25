@@ -17,6 +17,7 @@ public final class Sorts {
             new BucketSort(),
             new TimSort(),
             new IntroSort(),
+            new BinaryInsertionSort(),
             new ShellSort(),
             new CocktailShakerSort(),
             new CombSort(),
@@ -26,6 +27,7 @@ public final class Sorts {
             new CycleSort(),
             new BitonicSort(),
             new ExternalMergeSort(),
-            new PancakeSort()
+            new PancakeSort(),
+            new StrandSort()
     );
 }
